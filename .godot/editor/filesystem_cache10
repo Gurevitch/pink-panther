@@ -1,0 +1,43 @@
+63f7b34db8d8cdea90c76aacccf841ec
+::res://::1771597494
+Demo.tscn::PackedScene::4612101316202868971::1770638595::0::1::::<><><>0<>0<><>::uid://nttca11gblcf::::res://scripts/interior_main.gd<>uid://bem81yi4kpofw::::res://shaders/interior_background.gdshader<>uid://dql3oyajd0ua4::::res://scripts/room_builder.gd<>uid://b3q5yfok6gndr::::res://scripts/pink_panther.gd<>uid://daqx8cnu17bx4::::res://shaders/painted_texture.gdshader<>uid://cgppldmy0eaur::::res://shaders/paper_grain.gdshader<>uid://bg0bjo62ac45i::::res://scripts/dialog_system.gd<>uid://b2ogfyp86bj0t::::res://sounds/The Pink Panther's Passport to Peril OST #08 - Camp Chilly Wa-Wa (Day 2 & 3) [HQ].mp3<>uid://d3k83qqyygcsr::::res://scripts/scene_transition.gd
+export_presets.cfg::TextFile::-1::1770633841::0::1::::<><><>0<>0<><>::
+icon.svg::CompressedTexture2D::6149776532105914357::1770623113::1770634436::1::::<><><>0<>0<>0bd4a62cc180b33aac0447bb79836718<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
+::res://pictures/::1771594680
+11.jpg::CompressedTexture2D::8448479346455030178::1768750772::1770623583::1::::<><><>0<>0<>41956087e2fa933a465e7ccdae6172a8<>res://.godot/imported/11.jpg-97167ed75076a11fbd05342577421979.ctex::
+7174_59a316909a4cb.png::CompressedTexture2D::5721420951770105386::1768750734::1770623582::1::::<><><>0<>0<>d526b255491ba8cd39191b371cc81041<>res://.godot/imported/7174_59a316909a4cb.png-84fe838d9c781dae432090f465571fad.ctex::
+london.jpg::CompressedTexture2D::577337467264761505::1770638683::1770639286::1::::<><><>0<>0<>bc20b7690c7972b25d25521fe33d9f2a<>res://.godot/imported/london.jpg-c21737f23e0ae90020885749a4266551.ctex::
+mqdefault.jpg::CompressedTexture2D::2583288285185063360::1768750464::1770623582::1::::<><><>0<>0<>dea5328cc59270b51e3d37b633bca70d<>res://.godot/imported/mqdefault.jpg-678e4f16921266d4f1903f64189915bb.ctex::
+MV5BMmU5Njg5NDQtYWJlNi00ZWNhLWI5MDEtNTgzMDNkN2I0OTlhXkEyXkFqcGc@._V1_.jpg::CompressedTexture2D::6733175940696124741::1770624312::1770624537::1::::<><><>0<>0<>a254982a49533a14330bf2aa6b353b49<>res://.godot/imported/MV5BMmU5Njg5NDQtYWJlNi00ZWNhLWI5MDEtNTgzMDNkN2I0OTlhXkEyXkFqcGc@._V1_.jpg-a2a49a50df952c296f6c091daefb0a40.ctex::
+pinkpanther_07.png::CompressedTexture2D::6204892085732862973::1770624328::1770624536::1::::<><><>0<>0<>cb6c63e5d85e5ad72098206d69a87072<>res://.godot/imported/pinkpanther_07.png-1e91118e62369fc77aefceccb277ce6d.ctex::
+::res://pictures/Pink movment/::1771598167
+ChatGPT Image Jun 22, 2025, 12_08_30 PM.png::CompressedTexture2D::140091834698203742::1750583333::1770633480::1::::<><><>0<>0<>1b6c151442d97cc2560d30ab262b2a71<>res://.godot/imported/ChatGPT Image Jun 22, 2025, 12_08_30 PM.png-db8e3f052970b9e19b973750bf838672.ctex::
+pink_panther_front_idle.png::CompressedTexture2D::4349143120547292896::1771598163::1771598189::1::::<><><>0<>0<>ba335bf138fbc8255e602bbb19a5b0a8<>res://.godot/imported/pink_panther_front_idle.png-51e7173078ddb01d9ab0e05990ac641f.ctex::
+Roii_Gurevitch_i_want_to_generate_him_moveing_by_frames._only_him_with_no_backgr_07dad21e-e5d7-4f27-912f-2aff2ea5631c.jpg::CompressedTexture2D::1638767327899876151::1762875605::1770633480::1::::<><><>0<>0<>e0e8fd8ec94a9ab90b6eba02cb0d234f<>res://.godot/imported/Roii_Gurevitch_i_want_to_generate_him_moveing_by_frames._only_him_with_no_backgr_07dad21e-e5d7-4f27-912f-2aff2ea5631c.jpg-da9405275542354d56dd8a85759a2575.ctex::
+Roii_Gurevitch_i_want_to_generate_him_moveing_by_frames._only_him_with_no_backgr_8b1d3dba-8877-4b12-aa5a-0316ac08d33e.jpg::CompressedTexture2D::1872570013727525498::1762875609::1770633480::1::::<><><>0<>0<>acd2f7afaea80a6d9773d3b8214d06a1<>res://.godot/imported/Roii_Gurevitch_i_want_to_generate_him_moveing_by_frames._only_him_with_no_backgr_8b1d3dba-8877-4b12-aa5a-0316ac08d33e.jpg-744781dfadb801b4844e49dcd4930f75.ctex::
+Roii_Gurevitch_i_want_to_generate_him_moveing_by_frames._only_him_with_no_backgr_e654e14e-ff1b-4b32-8021-0d6f7c564bbe.jpg::CompressedTexture2D::3355583409789856135::1762875601::1770633480::1::::<><><>0<>0<>6798d365842f67d8fda8349a3e4e964d<>res://.godot/imported/Roii_Gurevitch_i_want_to_generate_him_moveing_by_frames._only_him_with_no_backgr_e654e14e-ff1b-4b32-8021-0d6f7c564bbe.jpg-268dc12f3bfef81a3edabca1389c7c96.ctex::
+Roii_Gurevitch_i_want_to_generate_him_moveing_by_frames._only_him_with_no_backgr_f65e4f0f-08e8-467f-b93d-ebf62c186da9.jpg::CompressedTexture2D::3769872917218767270::1762875614::1770633480::1::::<><><>0<>0<>9eac4615d7e1a6565d7d265b8a8ed01d<>res://.godot/imported/Roii_Gurevitch_i_want_to_generate_him_moveing_by_frames._only_him_with_no_backgr_f65e4f0f-08e8-467f-b93d-ebf62c186da9.jpg-b1b05bb999266dfcf9bbc49c634ed1dd.ctex::
+Screenshot 2026-02-20 152650.png::CompressedTexture2D::3333565867640938478::1771594089::1771594532::1::::<><><>0<>0<>c327102522ec7df4f01299cc12373e51<>res://.godot/imported/Screenshot 2026-02-20 152650.png-88747742a6c69ba7300aaf5553af6213.ctex::
+::res://resources/::1770623079
+::res://scenes/::1770629487
+interior.tscn::PackedScene::4784605069012822646::1771598083::0::1::::<><><>0<>0<><>::uid://nttca11gblcf::::res://scripts/interior_main.gd<>uid://b3q5yfok6gndr::::res://scripts/pink_panther.gd<>uid://bem81yi4kpofw::::res://shaders/interior_background.gdshader<>uid://daqx8cnu17bx4::::res://shaders/painted_texture.gdshader<>uid://cgppldmy0eaur::::res://shaders/paper_grain.gdshader<>uid://bg0bjo62ac45i::::res://scripts/dialog_system.gd<>uid://dql3oyajd0ua4::::res://scripts/room_builder.gd<>res://sounds/The Pink Panther's Passport to Peril OST #08 - Camp Chilly Wa-Wa (Day 2 & 3) [HQ].mp3<>res://scripts/scene_transition.gd<>res://pictures/Pink movment/Screenshot 2026-02-20 152650.png<>res://shaders/sprite_bg_remove.gdshader<>res://pictures/Pink movment/pink_panther_front_idle.png
+main.tscn::PackedScene::-1::1771597971::0::1::::<><><>0<>0<><>::res://scripts/main.gd<>res://scripts/pink_panther.gd<>res://shaders/city_background.gdshader<>res://scripts/dialog_system.gd<>res://scripts/clickable_object.gd<>res://shaders/sprite_bg_remove.gdshader<>res://pictures/Pink movment/pink_panther_front_idle.png
+::res://scripts/::1770632348
+clickable_object.gd::GDScript::3619431408851194640::1770629209::0::1::::ClickableObject<>Area2D<><>0<>0<><>::
+dialog_system.gd::GDScript::2859240762953408808::1770629804::0::1::::DialogSystem<>CanvasLayer<><>0<>0<><>::
+interior_main.gd::GDScript::952835380426235293::1770632131::0::1::::<>Node2D<><>0<>0<><>::
+main.gd::GDScript::4161016251434855825::1771597846::0::1::::<>Node2D<><>0<>0<><>::
+pink_panther.gd::GDScript::4386603003199719819::1771598177::0::1::::PinkPanther<>Node2D<><>0<>0<><>::
+room_builder.gd::GDScript::8306718042468945413::1770632108::0::1::::<>Node2D<><>0<>0<><>::
+scene_transition.gd::GDScript::9147247979688672045::1770632022::0::1::::SceneTransition<>CanvasLayer<><>0<>0<><>::
+::res://shaders/::1771598103
+city_background.gdshader::Shader::3184719329979511348::1771597248::0::1::::<><><>0<>0<><>::
+dynamic_background.gdshader::Shader::537464345818208598::1770623177::0::1::::<><><>0<>0<><>::
+interior_background.gdshader::Shader::2693999956947203888::1770630866::0::1::::<><><>0<>0<><>::
+painted_texture.gdshader::Shader::7193747643250620431::1770628269::0::1::::<><><>0<>0<><>::
+paper_grain.gdshader::Shader::5225870671381463785::1770628277::0::1::::<><><>0<>0<><>::
+::res://sounds/::1770632348
+The Pink Panther's Passport to Peril OST #08 - Camp Chilly Wa-Wa (Day 2 & 3) [HQ].mp3::AudioStreamMP3::4310795266676251233::1770631416::1770632348::1::::<><><>0<>0<>5397d2e0f2af76e8cd28c1d1e6ef97f3<>res://.godot/imported/The Pink Panther's Passport to Peril OST #08 - Camp Chilly Wa-Wa (Day 2 & 3) [HQ].mp3-b0933661f4432743cec8268892430e79.mp3str::
+::res://sprites/::1770623079
+::res://sprites/backgrounds/::1770623079
+::res://sprites/pink_panther/::1770623079
