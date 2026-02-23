@@ -5,45 +5,45 @@ signal arrived_at_target
 signal interaction_complete
 
 # =========================================================
-#  ANIMATION TUNING — 3D-on-2D feel, smooth & organic
+#  ANIMATION TUNING — 3D-on-2D cinematic feel
 # =========================================================
 
-# Idle
-@export var idle_bob_amount: float = 1.5
-@export var idle_bob_speed: float = 1.2
-@export var breathing_scale: float = 0.012
-@export var tail_swing_amount: float = 18.0
-@export var tail_swing_speed: float = 2.0
+@export var idle_bob_amount: float = 1.8
+@export var idle_bob_speed: float = 1.3
+@export var breathing_scale: float = 0.014
+@export var tail_swing_amount: float = 20.0
+@export var tail_swing_speed: float = 1.8
 @export var blink_interval: float = 3.5
 @export var blink_duration: float = 0.12
-@export var head_sway_amount: float = 2.0
+@export var head_sway_amount: float = 2.5
 
-# Movement
-@export var walk_speed: float = 100.0
+@export var walk_speed: float = 110.0
 @export var street_y: float = 420.0
 @export var min_x: float = 50.0
 @export var max_x: float = 910.0
 
-# Smoothing — all animations use lerp for buttery motion
-const SMOOTH_FAST: float = 12.0   # snappy (legs, arms)
-const SMOOTH_MED: float = 7.0    # medium (body, head)
-const SMOOTH_SLOW: float = 4.0   # gentle (tail, sway)
-const SMOOTH_XSLOW: float = 2.0  # very slow (weight shift, lean)
+const SM_FAST: float = 14.0
+const SM_MED: float = 8.0
+const SM_SLOW: float = 4.5
+const SM_XSLOW: float = 2.5
 
 var target_position: Vector2
 var is_walking: bool = false
 var facing_right: bool = true
 var pending_interaction: ClickableObject = null
+var dialog_system: DialogSystem = null
 
-# Core animation state
 var time: float = 0.0
 var blink_timer: float = 0.0
 var is_blinking: bool = false
 var walk_phase: float = 0.0
-var walk_blend: float = 0.0       # 0 = idle, 1 = walking (smooth blend)
+var walk_blend: float = 0.0
+var talk_blend: float = 0.0
+var velocity_x: float = 0.0
 
-# Smooth animation targets (we lerp TOWARD these each frame)
-var _body_pos_y: float = 0.0
+# Smooth animation targets
+var _body_py: float = 0.0
+var _body_px: float = 0.0
 var _body_rot: float = 0.0
 var _body_sx: float = 1.0
 var _body_sy: float = 1.0
@@ -61,9 +61,14 @@ var _right_ear_rot: float = 0.0
 var _snout_rot: float = 0.0
 var _shadow_sx: float = 1.0
 var _shadow_sy: float = 1.0
+var _mouth_open: float = 0.0
+var _lean: float = 0.0
+var _hip_sway: float = 0.0
 
-# Dialog system reference
-var dialog_system: DialogSystem = null
+# Fidget system
+var _fidget_timer: float = 5.0
+var _fidget_type: int = -1
+var _fidget_t: float = 0.0
 
 # Node references
 @onready var body: Polygon2D = $Body
@@ -80,18 +85,26 @@ var dialog_system: DialogSystem = null
 @onready var left_leg: Polygon2D = $Body/LeftLeg
 @onready var right_leg: Polygon2D = $Body/RightLeg
 @onready var shadow: Polygon2D = $Shadow
+@onready var mouth_line: Line2D = $Body/Neck/Head/Snout/Mouth
+@onready var left_brow: Line2D = $Body/Neck/Head/LeftEyebrow
+@onready var right_brow: Line2D = $Body/Neck/Head/RightEyebrow
 
-# Original transforms
 var original_positions: Dictionary = {}
 var original_rotations: Dictionary = {}
 var original_scales: Dictionary = {}
+var _orig_mouth_pts: PackedVector2Array
 
 
 func _ready() -> void:
 	global_position.y = street_y
 	target_position = global_position
 	_store_original_transforms()
+	if mouth_line:
+		_orig_mouth_pts = mouth_line.points.duplicate()
 	blink_timer = randf_range(1.0, blink_interval)
+	_fidget_timer = randf_range(4.0, 8.0)
+	var nk: Vector2 = original_positions.get("Neck", Vector2.ZERO)
+	_neck_py = nk.y
 	_hand_drawn_pass()
 
 
@@ -112,31 +125,36 @@ func get_all_polygon_children(node: Node) -> Array:
 
 
 # =========================================================
-#  MAIN PROCESS — smooth animation pipeline
+#  MAIN PROCESS
 # =========================================================
 
 func _process(delta: float) -> void:
 	time += delta
 
-	# Smooth walk/idle blend (0 -> 1 ramp up, 1 -> 0 ramp down)
-	var walk_target := 1.0 if is_walking else 0.0
-	walk_blend = lerp(walk_blend, walk_target, delta * SMOOTH_MED)
+	var is_talking := dialog_system != null and dialog_system.is_active()
+	walk_blend = lerp(walk_blend, 1.0 if is_walking else 0.0, delta * SM_MED)
+	talk_blend = lerp(talk_blend, 1.0 if is_talking else 0.0, delta * SM_MED)
 
-	# Handle blinking
 	_update_blink(delta)
 
-	# Compute animation targets
 	if is_walking:
 		_process_walking(delta)
+	else:
+		velocity_x = lerp(velocity_x, 0.0, delta * 3.0)
+
 	_compute_idle_targets(delta)
 
-	# Apply smooth interpolation to ALL parts
+	if is_walking:
+		_compute_walk_targets(delta)
+
+	if talk_blend > 0.05:
+		_compute_talk_targets(delta)
+
+	_compute_3d_depth(delta)
+	_update_fidgets(delta)
 	_apply_smooth_transforms(delta)
-
-	# Eye blink (already smooth)
 	_update_eyes(delta)
-
-	# Shadow
+	_update_mouth(delta)
 	_update_shadow(delta)
 
 
@@ -156,195 +174,355 @@ func _update_blink(delta: float) -> void:
 
 
 # =========================================================
-#  IDLE ANIMATION — organic, weighted, overlapping
+#  IDLE — organic breathing, overlapping action, weight shift
 # =========================================================
 
-func _compute_idle_targets(_delta: float) -> void:
-	var idle_w := 1.0 - walk_blend  # weight for idle motion
+func _compute_idle_targets(delta: float) -> void:
+	var idle_w := (1.0 - walk_blend) * (1.0 - talk_blend * 0.3)
 
-	# --- Body breathing bob ---
-	var bob := sin(time * idle_bob_speed) * idle_bob_amount
-	var breath_sx := 1.0 + sin(time * idle_bob_speed) * breathing_scale
-	var breath_sy := 1.0 + sin(time * idle_bob_speed) * breathing_scale * 0.5
+	var breath_phase := time * idle_bob_speed
+	var bob := sin(breath_phase) * idle_bob_amount
+	var breath_sx := 1.0 + sin(breath_phase) * breathing_scale
+	var breath_sy := 1.0 + cos(breath_phase) * breathing_scale * 0.7
 
-	# idle targets (blended with walk)
-	var body_base_y: float = (original_positions.get("Body", Vector2.ZERO) as Vector2).y
-	_body_pos_y = lerp(_body_pos_y, body_base_y + bob * idle_w, 1.0)
-	_body_sx = lerp(1.0, breath_sx, idle_w)
-	_body_sy = lerp(1.0, breath_sy, idle_w)
+	var body_base: Vector2 = original_positions.get("Body", Vector2.ZERO)
+	_body_py = lerp(_body_py, body_base.y + bob * idle_w, delta * SM_MED)
+	_body_px = lerp(_body_px, body_base.x, delta * SM_SLOW)
+	_body_sx = lerp(_body_sx, lerp(1.0, breath_sx, idle_w), delta * SM_MED)
+	_body_sy = lerp(_body_sy, lerp(1.0, breath_sy, idle_w), delta * SM_MED)
 
-	# idle body rotation (slight lean shifts)
-	var weight_shift := sin(time * 0.35) * deg_to_rad(1.2) * idle_w
-	_body_rot = lerp(_body_rot, weight_shift, 1.0)
+	var weight_shift := sin(time * 0.3) * deg_to_rad(1.5) * idle_w
+	if not is_walking:
+		_body_rot = lerp(_body_rot, weight_shift, delta * SM_XSLOW)
 
-	# --- Tail swing (slow, elegant, pendulum) ---
+	# Tail — elegant pendulum with secondary wave
 	var tail_base: float = original_rotations.get("Tail", 0.0)
-	var tail_swing := sin(time * tail_swing_speed) * deg_to_rad(tail_swing_amount)
-	# secondary motion: slight figure-8 wobble
-	var tail_wobble := sin(time * tail_swing_speed * 2.3) * deg_to_rad(3.0)
-	_tail_rot = tail_base + (tail_swing + tail_wobble) * idle_w + _tail_rot * walk_blend
+	var ts := tail_swing_speed
+	var tail_main := sin(time * ts) * deg_to_rad(tail_swing_amount)
+	var tail_secondary := sin(time * ts * 2.3 + 0.8) * deg_to_rad(4.0)
+	var tail_tertiary := sin(time * ts * 0.6 - 1.2) * deg_to_rad(6.0)
+	var tail_idle := tail_base + (tail_main + tail_secondary + tail_tertiary) * idle_w
+	if not is_walking:
+		_tail_rot = tail_idle
 
-	# --- Head sway (delayed from body, overlapping action) ---
-	var sway := sin(time * idle_bob_speed * 0.7 - 0.4) * head_sway_amount
+	# Head sway with overlapping delay from body
+	var sway := sin(time * idle_bob_speed * 0.6 - 0.5) * head_sway_amount
 	var neck_base: Vector2 = original_positions.get("Neck", Vector2.ZERO)
 	var head_base: Vector2 = original_positions.get("Head", Vector2.ZERO)
-	_neck_px = neck_base.x + sway * 0.25 * idle_w
-	_head_px = head_base.x + sway * 0.45 * idle_w
-	_head_rot = sin(time * idle_bob_speed * 0.5 - 0.6) * deg_to_rad(2.5) * idle_w
 
-	# --- Snout follows head with slight delay ---
-	_snout_rot = sin(time * idle_bob_speed * 0.5 - 1.0) * deg_to_rad(1.5) * idle_w
+	if not is_walking:
+		_neck_px = lerp(_neck_px, neck_base.x + sway * 0.3 * idle_w, delta * SM_SLOW)
+		_neck_py = lerp(_neck_py, neck_base.y, delta * SM_MED)
+		_head_px = lerp(_head_px, head_base.x + sway * 0.5 * idle_w, delta * SM_SLOW)
+		_head_rot = lerp(_head_rot, sin(time * idle_bob_speed * 0.4 - 0.7) * deg_to_rad(3.0) * idle_w, delta * SM_SLOW)
 
-	# --- Ear twitches (irregular, surprise) ---
+	_snout_rot = lerp(_snout_rot, sin(time * idle_bob_speed * 0.4 - 1.2) * deg_to_rad(2.0) * idle_w, delta * SM_XSLOW)
+
+	# Ear twitches
 	var ear_base_l: float = original_rotations.get("LeftEar", 0.0)
 	var ear_base_r: float = original_rotations.get("RightEar", 0.0)
-	if fmod(time, 4.0) < 0.25:
-		var twitch := sin(time * 22.0) * deg_to_rad(7.0)
-		_left_ear_rot = ear_base_l + twitch
-		_right_ear_rot = ear_base_r - twitch * 0.6
-	elif fmod(time, 6.5) < 0.15:
-		_right_ear_rot = ear_base_r + sin(time * 30.0) * deg_to_rad(5.0)
-		_left_ear_rot = ear_base_l
-	else:
-		_left_ear_rot = ear_base_l
-		_right_ear_rot = ear_base_r
+	if not is_walking:
+		if fmod(time, 4.0) < 0.3:
+			var twitch := sin(time * 20.0) * deg_to_rad(8.0)
+			_left_ear_rot = ear_base_l + twitch
+			_right_ear_rot = ear_base_r - twitch * 0.5
+		elif fmod(time, 7.0) < 0.2:
+			_right_ear_rot = ear_base_r + sin(time * 25.0) * deg_to_rad(6.0)
+			_left_ear_rot = ear_base_l
+		else:
+			var gentle := sin(time * 0.8) * deg_to_rad(1.5)
+			_left_ear_rot = lerp(_left_ear_rot, ear_base_l + gentle, delta * SM_SLOW)
+			_right_ear_rot = lerp(_right_ear_rot, ear_base_r - gentle * 0.7, delta * SM_SLOW)
 
-	# --- Arms idle sway (pendulum, slightly offset) ---
-	var arm_idle := sin(time * idle_bob_speed * 0.8 - 0.3) * deg_to_rad(4.0)
-	var arm_l: float = original_rotations.get("LeftArm", 0.0) + arm_idle * idle_w
-	var arm_r: float = original_rotations.get("RightArm", 0.0) - arm_idle * idle_w
-	_left_arm_rot = lerp(_left_arm_rot, arm_l, 1.0)
-	_right_arm_rot = lerp(_right_arm_rot, arm_r, 1.0)
+	# Arms idle pendulum
+	if not is_walking and talk_blend < 0.3:
+		var arm_idle := sin(time * idle_bob_speed * 0.7 - 0.3) * deg_to_rad(5.0) * idle_w
+		var arm_l_base: float = original_rotations.get("LeftArm", 0.0)
+		var arm_r_base: float = original_rotations.get("RightArm", 0.0)
+		_left_arm_rot = lerp(_left_arm_rot, arm_l_base + arm_idle, delta * SM_SLOW)
+		_right_arm_rot = lerp(_right_arm_rot, arm_r_base - arm_idle, delta * SM_SLOW)
 
-	# --- Legs idle (very subtle weight shifting) ---
-	var leg_idle := sin(time * 0.4) * deg_to_rad(1.5) * idle_w
-	var leg_base_l: float = original_rotations.get("LeftLeg", 0.0)
-	var leg_base_r: float = original_rotations.get("RightLeg", 0.0)
-	_left_leg_rot = lerp(_left_leg_rot, leg_base_l + leg_idle, 1.0)
-	_right_leg_rot = lerp(_right_leg_rot, leg_base_r - leg_idle * 0.5, 1.0)
+	# Legs idle weight shift
+	if not is_walking:
+		var leg_shift := sin(time * 0.35) * deg_to_rad(2.0) * idle_w
+		var leg_l_base: float = original_rotations.get("LeftLeg", 0.0)
+		var leg_r_base: float = original_rotations.get("RightLeg", 0.0)
+		_left_leg_rot = lerp(_left_leg_rot, leg_l_base + leg_shift, delta * SM_SLOW)
+		_right_leg_rot = lerp(_right_leg_rot, leg_r_base - leg_shift * 0.5, delta * SM_SLOW)
 
 
 # =========================================================
-#  WALK CYCLE — smooth sine-driven with squash/stretch
+#  WALK — weight transfer, hip sway, 3D lean
 # =========================================================
 
 func _process_walking(delta: float) -> void:
-	var direction: float = sign(target_position.x - global_position.x)
-	var distance: float = abs(target_position.x - global_position.x)
+	var dir_to_target: float = sign(target_position.x - global_position.x)
+	var dist: float = abs(target_position.x - global_position.x)
 
-	if distance > 8.0:
-		var speed_factor := clampf(distance / 40.0, 0.3, 1.0)
-		global_position.x += direction * walk_speed * speed_factor * delta
+	if dist > 8.0:
+		var speed_factor := clampf(dist / 50.0, 0.3, 1.0)
+		velocity_x = dir_to_target * walk_speed * speed_factor
+		global_position.x += velocity_x * delta
 		global_position.x = clamp(global_position.x, min_x, max_x)
 		global_position.y = street_y
 
-		if direction > 0 and not facing_right:
+		if dir_to_target > 0 and not facing_right:
 			facing_right = true
 			scale.x = abs(scale.x)
-		elif direction < 0 and facing_right:
+		elif dir_to_target < 0 and facing_right:
 			facing_right = false
 			scale.x = -abs(scale.x)
 
-		walk_phase += delta * 8.0 * speed_factor
-		_compute_walk_targets()
+		walk_phase += delta * 7.0 * speed_factor
 	else:
 		is_walking = false
+		velocity_x = 0.0
 		arrived_at_target.emit()
 		if pending_interaction:
 			_do_interaction(pending_interaction)
 			pending_interaction = null
 
 
-func _compute_walk_targets() -> void:
-	var wp := walk_phase
+func _compute_walk_targets(delta: float) -> void:
 	var w := walk_blend
+	var wp := walk_phase
 
-	var bob: float = -abs(sin(wp * 2.0)) * 3.5
-	var walk_body_base: Vector2 = original_positions.get("Body", Vector2.ZERO)
-	_body_pos_y = walk_body_base.y + bob * w
+	# Double-bounce body bob (contact points)
+	var contact_bob: float = -abs(sin(wp * 2.0)) * 4.0
+	var body_base: Vector2 = original_positions.get("Body", Vector2.ZERO)
+	_body_py = body_base.y + contact_bob * w
 
+	# Lean into movement direction
+	var speed_pct := clampf(abs(velocity_x) / walk_speed, 0.0, 1.0)
+	_lean = lerp(_lean, deg_to_rad(-4.0) * speed_pct * w, delta * SM_MED)
+	_body_rot = _lean
+
+	# Hip sway counter-rotation
+	_hip_sway = sin(wp) * deg_to_rad(3.0) * w
+	_body_px = body_base.x + sin(wp) * 1.5 * w
+
+	# Squash/stretch on contact
 	var squash := sin(wp * 2.0)
-	_body_sx = 1.0 + squash * 0.025 * w
-	_body_sy = 1.0 - squash * 0.018 * w
+	_body_sx = 1.0 + squash * 0.03 * w
+	_body_sy = 1.0 - squash * 0.02 * w
 
-	_body_rot = deg_to_rad(-3.0) * w
+	# Legs — alternating stride
+	var leg_swing := sin(wp) * deg_to_rad(35.0) * w
+	var ll_base: float = original_rotations.get("LeftLeg", 0.0)
+	var rl_base: float = original_rotations.get("RightLeg", 0.0)
+	_left_leg_rot = ll_base + leg_swing
+	_right_leg_rot = rl_base - leg_swing
 
-	var leg_swing := sin(wp) * deg_to_rad(32.0) * w
-	var w_leg_l: float = original_rotations.get("LeftLeg", 0.0)
-	var w_leg_r: float = original_rotations.get("RightLeg", 0.0)
-	_left_leg_rot = w_leg_l + leg_swing
-	_right_leg_rot = w_leg_r - leg_swing
+	# Arms — counter-swing (overlapping action, phase offset)
+	var arm_swing := sin(wp - 0.5) * deg_to_rad(25.0) * w
+	var la_base: float = original_rotations.get("LeftArm", 0.0)
+	var ra_base: float = original_rotations.get("RightArm", 0.0)
+	_left_arm_rot = la_base - arm_swing
+	_right_arm_rot = ra_base + arm_swing
 
-	var arm_swing := sin(wp - 0.4) * deg_to_rad(22.0) * w
-	var w_arm_l: float = original_rotations.get("LeftArm", 0.0)
-	var w_arm_r: float = original_rotations.get("RightArm", 0.0)
-	_left_arm_rot = w_arm_l - arm_swing
-	_right_arm_rot = w_arm_r + arm_swing
+	# Tail — momentum delay
+	var tail_walk := sin(wp - PI / 2.0) * deg_to_rad(30.0) * w
+	var tail_wave := sin(wp * 1.6 - 1.0) * deg_to_rad(6.0) * w
+	var tail_base: float = original_rotations.get("Tail", 0.0)
+	_tail_rot = tail_base + tail_walk + tail_wave
 
-	var tail_walk := sin(wp - PI / 2.5) * deg_to_rad(28.0) * w
-	var tail_secondary := sin(wp * 1.7 - 1.0) * deg_to_rad(5.0) * w
-	var w_tail: float = original_rotations.get("Tail", 0.0)
-	_tail_rot = w_tail + tail_walk + tail_secondary
+	# Head look-ahead bob
+	var neck_base: Vector2 = original_positions.get("Neck", Vector2.ZERO)
+	var head_bob := sin(wp * 2.0 + PI) * 2.0 * w
+	_neck_px = neck_base.x + sin(wp * 0.5) * 1.5 * w
+	_neck_py = neck_base.y + head_bob * 0.4
+	_head_rot = sin(wp - 0.6) * deg_to_rad(5.0) * w
+	_head_px = (original_positions.get("Head", Vector2.ZERO) as Vector2).x + 2.0 * w
 
-	var head_bob := sin(wp * 2.0 + PI) * 1.8 * w
-	var w_neck_base: Vector2 = original_positions.get("Neck", Vector2.ZERO)
-	_neck_py = w_neck_base.y + head_bob * 0.3
-	_head_rot = sin(wp - 0.5) * deg_to_rad(4.5) * w
+	_snout_rot = sin(wp * 2.0 + 1.5) * deg_to_rad(2.5) * w
 
-	_snout_rot = sin(wp * 2.0 + 1.5) * deg_to_rad(2.0) * w
-
-	var ear_bounce := sin(wp * 2.0 + 0.8) * deg_to_rad(4.0) * w
-	var w_ear_l: float = original_rotations.get("LeftEar", 0.0)
-	var w_ear_r: float = original_rotations.get("RightEar", 0.0)
-	_left_ear_rot = w_ear_l + ear_bounce
-	_right_ear_rot = w_ear_r - ear_bounce * 0.7
+	# Ear bounce
+	var ear_bounce := sin(wp * 2.0 + 0.8) * deg_to_rad(5.0) * w
+	var el_base: float = original_rotations.get("LeftEar", 0.0)
+	var er_base: float = original_rotations.get("RightEar", 0.0)
+	_left_ear_rot = el_base + ear_bounce
+	_right_ear_rot = er_base - ear_bounce * 0.6
 
 	_shadow_sx = 1.0 + abs(sin(wp)) * 0.12 * w
 	_shadow_sy = 1.0 - abs(sin(wp)) * 0.06 * w
 
 
 # =========================================================
-#  APPLY TRANSFORMS — smooth lerp for every part
+#  TALK — mouth, gestures, head nods, expressions
+# =========================================================
+
+func _compute_talk_targets(delta: float) -> void:
+	var t := talk_blend
+	var typing := dialog_system != null and dialog_system.is_typing
+
+	# Mouth open/close rhythm
+	if typing:
+		var mouth_cycle := sin(time * 12.0) * 0.5 + 0.5
+		var mouth_var := sin(time * 7.3) * 0.3
+		_mouth_open = lerp(_mouth_open, clampf(mouth_cycle + mouth_var, 0.0, 1.0) * t, delta * SM_FAST * 2.0)
+	else:
+		_mouth_open = lerp(_mouth_open, 0.0, delta * SM_FAST)
+
+	# Head nods during speech
+	var nod := sin(time * 3.0) * deg_to_rad(4.0) * t
+	_head_rot = lerp(_head_rot, nod, delta * SM_MED)
+
+	var hb: Vector2 = original_positions.get("Head", Vector2.ZERO)
+	_head_px = lerp(_head_px, hb.x + sin(time * 2.0) * 1.5 * t, delta * SM_SLOW)
+
+	# Right arm gesture (raises periodically while talking)
+	var gesture := sin(time * 2.0)
+	if gesture > 0.3 and t > 0.5:
+		var gesture_amt := (gesture - 0.3) / 0.7
+		var ra_base: float = original_rotations.get("RightArm", 0.0)
+		_right_arm_rot = lerp(_right_arm_rot, ra_base + deg_to_rad(-35.0) * gesture_amt * t, delta * SM_MED)
+
+	# Left arm slight emphasis counter-gesture
+	var counter_gesture := sin(time * 1.6 + PI) * 0.5 + 0.5
+	if counter_gesture > 0.6 and t > 0.5:
+		var la_base: float = original_rotations.get("LeftArm", 0.0)
+		_left_arm_rot = lerp(_left_arm_rot, la_base + deg_to_rad(-15.0) * counter_gesture * t, delta * SM_SLOW)
+
+	# Lean slightly forward when talking
+	_body_rot = lerp(_body_rot, deg_to_rad(1.5) * t, delta * SM_SLOW)
+
+	# Body emphasis bob
+	var body_base: Vector2 = original_positions.get("Body", Vector2.ZERO)
+	_body_py = lerp(_body_py, body_base.y + sin(time * 3.5) * 1.0 * t, delta * SM_MED)
+
+
+# =========================================================
+#  3D DEPTH — foreshortening, near/far limb scaling
+# =========================================================
+
+func _compute_3d_depth(delta: float) -> void:
+	var speed_ratio := clampf(abs(velocity_x) / walk_speed, 0.0, 1.0)
+
+	if is_walking and speed_ratio > 0.1:
+		var near_s := 1.0 + speed_ratio * 0.06
+		var far_s := 1.0 - speed_ratio * 0.04
+		left_arm.scale = lerp(left_arm.scale, Vector2(far_s, 1.0), delta * SM_MED)
+		right_arm.scale = lerp(right_arm.scale, Vector2(near_s, 1.0), delta * SM_MED)
+		left_leg.scale = lerp(left_leg.scale, Vector2(far_s, 1.0), delta * SM_MED)
+		right_leg.scale = lerp(right_leg.scale, Vector2(near_s, 1.0), delta * SM_MED)
+	else:
+		var one := Vector2(1.0, 1.0)
+		left_arm.scale = lerp(left_arm.scale, one, delta * SM_SLOW)
+		right_arm.scale = lerp(right_arm.scale, one, delta * SM_SLOW)
+		left_leg.scale = lerp(left_leg.scale, one, delta * SM_SLOW)
+		right_leg.scale = lerp(right_leg.scale, one, delta * SM_SLOW)
+
+
+# =========================================================
+#  IDLE FIDGETS — look around, scratch head, tail flick
+# =========================================================
+
+func _update_fidgets(delta: float) -> void:
+	if is_walking or talk_blend > 0.3:
+		_fidget_type = -1
+		_fidget_timer = randf_range(3.0, 6.0)
+		return
+
+	if _fidget_type < 0:
+		_fidget_timer -= delta
+		if _fidget_timer <= 0:
+			_fidget_type = randi() % 3
+			_fidget_t = 0.0
+		return
+
+	_fidget_t += delta
+	var p := _fidget_t
+
+	match _fidget_type:
+		0:
+			var look := sin(p * 3.0) * deg_to_rad(12.0) * clampf(1.0 - p / 2.0, 0.0, 1.0)
+			_head_rot += look
+			if p > 2.0:
+				_fidget_type = -1
+				_fidget_timer = randf_range(5.0, 10.0)
+		1:
+			var raise := sin(clampf(p, 0.0, 1.5) * PI / 1.5)
+			_right_arm_rot += deg_to_rad(-40.0) * raise
+			if p > 2.0:
+				_fidget_type = -1
+				_fidget_timer = randf_range(6.0, 12.0)
+		2:
+			var flick := sin(p * 10.0) * deg_to_rad(15.0) * exp(-p * 2.0)
+			_tail_rot += flick
+			if p > 1.5:
+				_fidget_type = -1
+				_fidget_timer = randf_range(4.0, 8.0)
+
+
+# =========================================================
+#  APPLY TRANSFORMS — smooth lerp on every part
 # =========================================================
 
 func _apply_smooth_transforms(delta: float) -> void:
-	body.position.y = lerp(body.position.y, _body_pos_y, delta * SMOOTH_MED)
-	body.rotation = lerp(body.rotation, _body_rot, delta * SMOOTH_XSLOW)
-	body.scale.x = lerp(body.scale.x, _body_sx, delta * SMOOTH_FAST)
-	body.scale.y = lerp(body.scale.y, _body_sy, delta * SMOOTH_FAST)
+	body.position.x = lerp(body.position.x, _body_px, delta * SM_MED)
+	body.position.y = lerp(body.position.y, _body_py, delta * SM_MED)
+	body.rotation = lerp(body.rotation, _body_rot + _hip_sway, delta * SM_MED)
+	body.scale.x = lerp(body.scale.x, _body_sx, delta * SM_FAST)
+	body.scale.y = lerp(body.scale.y, _body_sy, delta * SM_FAST)
 
-	neck.position.x = lerp(neck.position.x, _neck_px, delta * SMOOTH_SLOW)
-	neck.position.y = lerp(neck.position.y, _neck_py, delta * SMOOTH_MED)
-	head.position.x = lerp(head.position.x, _head_px, delta * SMOOTH_SLOW)
-	head.rotation = lerp(head.rotation, _head_rot, delta * SMOOTH_SLOW)
+	neck.position.x = lerp(neck.position.x, _neck_px, delta * SM_SLOW)
+	neck.position.y = lerp(neck.position.y, _neck_py, delta * SM_MED)
+	head.position.x = lerp(head.position.x, _head_px, delta * SM_SLOW)
+	head.rotation = lerp(head.rotation, _head_rot, delta * SM_SLOW)
 
-	snout.rotation = lerp(snout.rotation, _snout_rot, delta * SMOOTH_XSLOW)
+	snout.rotation = lerp(snout.rotation, _snout_rot, delta * SM_XSLOW)
 
-	tail.rotation = lerp(tail.rotation, _tail_rot, delta * SMOOTH_SLOW)
+	tail.rotation = lerp(tail.rotation, _tail_rot, delta * SM_SLOW)
 
-	left_arm.rotation = lerp(left_arm.rotation, _left_arm_rot, delta * SMOOTH_FAST)
-	right_arm.rotation = lerp(right_arm.rotation, _right_arm_rot, delta * SMOOTH_FAST)
+	left_arm.rotation = lerp(left_arm.rotation, _left_arm_rot, delta * SM_FAST)
+	right_arm.rotation = lerp(right_arm.rotation, _right_arm_rot, delta * SM_FAST)
 
-	left_leg.rotation = lerp(left_leg.rotation, _left_leg_rot, delta * SMOOTH_FAST)
-	right_leg.rotation = lerp(right_leg.rotation, _right_leg_rot, delta * SMOOTH_FAST)
+	left_leg.rotation = lerp(left_leg.rotation, _left_leg_rot, delta * SM_FAST)
+	right_leg.rotation = lerp(right_leg.rotation, _right_leg_rot, delta * SM_FAST)
 
-	left_ear.rotation = lerp(left_ear.rotation, _left_ear_rot, delta * SMOOTH_MED)
-	right_ear.rotation = lerp(right_ear.rotation, _right_ear_rot, delta * SMOOTH_MED)
+	left_ear.rotation = lerp(left_ear.rotation, _left_ear_rot, delta * SM_MED)
+	right_ear.rotation = lerp(right_ear.rotation, _right_ear_rot, delta * SM_MED)
 
-	shadow.scale.x = lerp(shadow.scale.x, _shadow_sx, delta * SMOOTH_MED)
-	shadow.scale.y = lerp(shadow.scale.y, _shadow_sy, delta * SMOOTH_MED)
+	shadow.scale.x = lerp(shadow.scale.x, _shadow_sx, delta * SM_MED)
+	shadow.scale.y = lerp(shadow.scale.y, _shadow_sy, delta * SM_MED)
 
 
 # =========================================================
-#  EYES — smooth blink with squash
+#  EYES — blink with squash
 # =========================================================
 
 func _update_eyes(delta: float) -> void:
 	var target_sy := 0.08 if is_blinking else 1.0
-	var speed := SMOOTH_FAST * 2.0 if is_blinking else SMOOTH_MED
+	var speed := SM_FAST * 2.0 if is_blinking else SM_MED
 	left_eye.scale.y = lerp(left_eye.scale.y, target_sy, delta * speed)
 	right_eye.scale.y = lerp(right_eye.scale.y, target_sy, delta * speed)
 
+
+# =========================================================
+#  MOUTH — animate Line2D points for talk
+# =========================================================
+
+func _update_mouth(_delta: float) -> void:
+	if not mouth_line or _orig_mouth_pts.size() < 6:
+		return
+	var open := _mouth_open
+	var pts := _orig_mouth_pts.duplicate()
+	# Push lower lip points downward when mouth opens
+	# Original: (-5,-1), (-3,3), (0,4), (3,3), (5,-1), (8,-3)
+	# Indices 1,2,3 are the lower curve
+	pts[1].y += open * 6.0
+	pts[2].y += open * 8.0
+	pts[3].y += open * 6.0
+	# Slight upward pull on corners for smile shape
+	pts[0].y -= open * 1.0
+	pts[4].y -= open * 1.0
+	pts[5].y -= open * 1.5
+	mouth_line.points = pts
+
+
+# =========================================================
+#  SHADOW
+# =========================================================
 
 func _update_shadow(_delta: float) -> void:
 	if not is_walking:

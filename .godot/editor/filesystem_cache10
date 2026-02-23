@@ -1,5 +1,5 @@
 63f7b34db8d8cdea90c76aacccf841ec
-::res://::1771597494
+::res://::1771870168
 Demo.tscn::PackedScene::4612101316202868971::1770638595::0::1::::<><><>0<>0<><>::uid://nttca11gblcf::::res://scripts/interior_main.gd<>uid://bem81yi4kpofw::::res://shaders/interior_background.gdshader<>uid://dql3oyajd0ua4::::res://scripts/room_builder.gd<>uid://b3q5yfok6gndr::::res://scripts/pink_panther.gd<>uid://daqx8cnu17bx4::::res://shaders/painted_texture.gdshader<>uid://cgppldmy0eaur::::res://shaders/paper_grain.gdshader<>uid://bg0bjo62ac45i::::res://scripts/dialog_system.gd<>uid://b2ogfyp86bj0t::::res://sounds/The Pink Panther's Passport to Peril OST #08 - Camp Chilly Wa-Wa (Day 2 & 3) [HQ].mp3<>uid://d3k83qqyygcsr::::res://scripts/scene_transition.gd
 export_presets.cfg::TextFile::-1::1770633841::0::1::::<><><>0<>0<><>::
 icon.svg::CompressedTexture2D::6149776532105914357::1770623113::1770634436::1::::<><><>0<>0<>0bd4a62cc180b33aac0447bb79836718<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
@@ -10,7 +10,7 @@ london.jpg::CompressedTexture2D::577337467264761505::1770638683::1770639286::1::
 mqdefault.jpg::CompressedTexture2D::2583288285185063360::1768750464::1770623582::1::::<><><>0<>0<>dea5328cc59270b51e3d37b633bca70d<>res://.godot/imported/mqdefault.jpg-678e4f16921266d4f1903f64189915bb.ctex::
 MV5BMmU5Njg5NDQtYWJlNi00ZWNhLWI5MDEtNTgzMDNkN2I0OTlhXkEyXkFqcGc@._V1_.jpg::CompressedTexture2D::6733175940696124741::1770624312::1770624537::1::::<><><>0<>0<>a254982a49533a14330bf2aa6b353b49<>res://.godot/imported/MV5BMmU5Njg5NDQtYWJlNi00ZWNhLWI5MDEtNTgzMDNkN2I0OTlhXkEyXkFqcGc@._V1_.jpg-a2a49a50df952c296f6c091daefb0a40.ctex::
 pinkpanther_07.png::CompressedTexture2D::6204892085732862973::1770624328::1770624536::1::::<><><>0<>0<>cb6c63e5d85e5ad72098206d69a87072<>res://.godot/imported/pinkpanther_07.png-1e91118e62369fc77aefceccb277ce6d.ctex::
-::res://pictures/Pink movment/::1771598167
+::res://pictures/Pink movment/::1771598189
 ChatGPT Image Jun 22, 2025, 12_08_30 PM.png::CompressedTexture2D::140091834698203742::1750583333::1770633480::1::::<><><>0<>0<>1b6c151442d97cc2560d30ab262b2a71<>res://.godot/imported/ChatGPT Image Jun 22, 2025, 12_08_30 PM.png-db8e3f052970b9e19b973750bf838672.ctex::
 pink_panther_front_idle.png::CompressedTexture2D::4349143120547292896::1771598163::1771598189::1::::<><><>0<>0<>ba335bf138fbc8255e602bbb19a5b0a8<>res://.godot/imported/pink_panther_front_idle.png-51e7173078ddb01d9ab0e05990ac641f.ctex::
 Roii_Gurevitch_i_want_to_generate_him_moveing_by_frames._only_him_with_no_backgr_07dad21e-e5d7-4f27-912f-2aff2ea5631c.jpg::CompressedTexture2D::1638767327899876151::1762875605::1770633480::1::::<><><>0<>0<>e0e8fd8ec94a9ab90b6eba02cb0d234f<>res://.godot/imported/Roii_Gurevitch_i_want_to_generate_him_moveing_by_frames._only_him_with_no_backgr_07dad21e-e5d7-4f27-912f-2aff2ea5631c.jpg-da9405275542354d56dd8a85759a2575.ctex::
@@ -20,14 +20,14 @@ Roii_Gurevitch_i_want_to_generate_him_moveing_by_frames._only_him_with_no_backgr
 Screenshot 2026-02-20 152650.png::CompressedTexture2D::3333565867640938478::1771594089::1771594532::1::::<><><>0<>0<>c327102522ec7df4f01299cc12373e51<>res://.godot/imported/Screenshot 2026-02-20 152650.png-88747742a6c69ba7300aaf5553af6213.ctex::
 ::res://resources/::1770623079
 ::res://scenes/::1770629487
-interior.tscn::PackedScene::4784605069012822646::1771598083::0::1::::<><><>0<>0<><>::uid://nttca11gblcf::::res://scripts/interior_main.gd<>uid://b3q5yfok6gndr::::res://scripts/pink_panther.gd<>uid://bem81yi4kpofw::::res://shaders/interior_background.gdshader<>uid://daqx8cnu17bx4::::res://shaders/painted_texture.gdshader<>uid://cgppldmy0eaur::::res://shaders/paper_grain.gdshader<>uid://bg0bjo62ac45i::::res://scripts/dialog_system.gd<>uid://dql3oyajd0ua4::::res://scripts/room_builder.gd<>res://sounds/The Pink Panther's Passport to Peril OST #08 - Camp Chilly Wa-Wa (Day 2 & 3) [HQ].mp3<>res://scripts/scene_transition.gd<>res://pictures/Pink movment/Screenshot 2026-02-20 152650.png<>res://shaders/sprite_bg_remove.gdshader<>res://pictures/Pink movment/pink_panther_front_idle.png
-main.tscn::PackedScene::-1::1771597971::0::1::::<><><>0<>0<><>::res://scripts/main.gd<>res://scripts/pink_panther.gd<>res://shaders/city_background.gdshader<>res://scripts/dialog_system.gd<>res://scripts/clickable_object.gd<>res://shaders/sprite_bg_remove.gdshader<>res://pictures/Pink movment/pink_panther_front_idle.png
+interior.tscn::PackedScene::4784605069012822646::1771601116::0::1::::<><><>0<>0<><>::uid://nttca11gblcf::::res://scripts/interior_main.gd<>uid://b3q5yfok6gndr::::res://scripts/pink_panther.gd<>uid://bem81yi4kpofw::::res://shaders/interior_background.gdshader<>uid://daqx8cnu17bx4::::res://shaders/painted_texture.gdshader<>uid://cgppldmy0eaur::::res://shaders/paper_grain.gdshader<>uid://bg0bjo62ac45i::::res://scripts/dialog_system.gd<>uid://dql3oyajd0ua4::::res://scripts/room_builder.gd<>res://sounds/The Pink Panther's Passport to Peril OST #08 - Camp Chilly Wa-Wa (Day 2 & 3) [HQ].mp3<>res://scripts/scene_transition.gd
+main.tscn::PackedScene::-1::1771601118::0::1::::<><><>0<>0<><>::res://scripts/main.gd<>res://scripts/pink_panther.gd<>res://shaders/city_background.gdshader<>res://scripts/dialog_system.gd<>res://scripts/clickable_object.gd
 ::res://scripts/::1770632348
 clickable_object.gd::GDScript::3619431408851194640::1770629209::0::1::::ClickableObject<>Area2D<><>0<>0<><>::
 dialog_system.gd::GDScript::2859240762953408808::1770629804::0::1::::DialogSystem<>CanvasLayer<><>0<>0<><>::
 interior_main.gd::GDScript::952835380426235293::1770632131::0::1::::<>Node2D<><>0<>0<><>::
 main.gd::GDScript::4161016251434855825::1771597846::0::1::::<>Node2D<><>0<>0<><>::
-pink_panther.gd::GDScript::4386603003199719819::1771598177::0::1::::PinkPanther<>Node2D<><>0<>0<><>::
+pink_panther.gd::GDScript::4386603003199719819::1771601138::0::1::::PinkPanther<>Node2D<><>0<>0<><>::
 room_builder.gd::GDScript::8306718042468945413::1770632108::0::1::::<>Node2D<><>0<>0<><>::
 scene_transition.gd::GDScript::9147247979688672045::1770632022::0::1::::SceneTransition<>CanvasLayer<><>0<>0<><>::
 ::res://shaders/::1771598103

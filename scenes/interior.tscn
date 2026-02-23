@@ -104,10 +104,10 @@ script = ExtResource("7_builder")
 
 [node name="PinkPanther" type="Node2D" parent="."]
 z_index = 10
-position = Vector2(480, 430)
-scale = Vector2(0.55, 0.55)
+position = Vector2(480, 435)
+scale = Vector2(0.6, 0.6)
 script = ExtResource("2_panther")
-street_y = 430.0
+street_y = 435.0
 min_x = 80.0
 max_x = 880.0
 
